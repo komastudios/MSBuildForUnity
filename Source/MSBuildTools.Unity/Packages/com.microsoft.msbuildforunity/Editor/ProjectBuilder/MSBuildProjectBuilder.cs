@@ -34,9 +34,21 @@ namespace Microsoft.Build.Unity
 
         private static string GetDotNetPath()
         {
-            return RuntimeInformation.IsOSPlatform(OSPlatform.Windows)
-                ? (TryGetPathFor("dotnet.exe", out string result) ? result : "dotnet")
-                : (TryGetPathFor("dotnet", out result) ? result : "/usr/local/share/dotnet/dotnet");
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+            {
+                return TryGetPathFor("dotnet.exe", out string winResult) ? winResult : "dotnet";
+            }
+
+            // Unity's launcher frequently runs with a PATH that doesn't
+            // include homebrew, so the PATH scan below misses the common
+            // Apple Silicon install. Check well-known absolute paths as
+            // fallbacks in preference order: homebrew first, then the
+            // legacy Microsoft x64 install path.
+            if (TryGetPathFor("dotnet", out string result))
+                return result;
+            if (File.Exists("/opt/homebrew/bin/dotnet"))
+                return "/opt/homebrew/bin/dotnet";
+            return "/usr/local/share/dotnet/dotnet";
         }
 
         private static async Task<string> GetMSBuildPath()
