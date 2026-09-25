@@ -172,6 +172,15 @@ namespace Microsoft.Build.Unity.ProjectGeneration
 
         static MSBuildTools()
         {
+#if UNITY_2020_2_OR_NEWER
+            // Asset import worker processes load editor scripts too. Refreshing from there runs Clean against the shared
+            // output folders and then fails to regenerate (package paths don't resolve under -noUpm), wiping the generated props.
+            if (AssetDatabase.IsAssetImportWorkerProcess())
+            {
+                return;
+            }
+#endif
+
             if (EditorAnalyticsSessionInfo.elapsedTime == 0)
             {
                 // The Unity asset database cannot be queried until the Editor is fully loaded. The first editor update tick seems to be a safe bet for this.

@@ -83,6 +83,14 @@ namespace Microsoft.Build.Unity
         {
             static BuildOnLoad()
             {
+#if UNITY_2020_2_OR_NEWER
+                // Asset import worker processes load editor scripts too; only the main editor process should build.
+                if (AssetDatabase.IsAssetImportWorkerProcess())
+                {
+                    return;
+                }
+#endif
+
                 // Only do this when Unity is first loading the project (not when the AppDomain reloads due to switching between play/edit mode, recompiling project scripts, etc.).
                 if (EditorAnalyticsSessionInfo.elapsedTime == 0)
                 {
